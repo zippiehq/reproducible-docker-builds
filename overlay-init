@@ -1,0 +1,14 @@
+#!/bin/sh
+PATH=/bin:/sbin:/usr/sbin:/usr/bin
+export PATH
+mkfs.ext2 /dev/vdc &> /dev/console
+ls -al /dev/vdc
+mount -t ext2 -o rw /dev/vdc /mnt
+mkdir -p /mnt/upper /mnt/work /mnt/root /mnt/docker /mnt/result
+mount -t overlay overlay -olowerdir=/,upperdir=/mnt/upper,workdir=/mnt/work /mnt/root
+mount --bind /mnt/docker /mnt/root/var/lib/docker
+mkdir -p /mnt/root/mnt/oldroot /mnt/root/mnt/result
+mount --bind /mnt/result /mnt/root/mnt/result
+cd /mnt/root
+pivot_root . ./mnt/oldroot
+exec /usr/sbin/chroot . /sbin/init
