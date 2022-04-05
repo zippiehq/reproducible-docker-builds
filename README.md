@@ -33,14 +33,12 @@ NOTE: This README.md is not part of the replayable source set
 
 This will take about 8 minutes:
 
-16. `docker run -it -v $PWD/cache:/src -v $(realpath ../reproducible-docker-builds-cache-1.0-35b5d54c8a901db6bd02893c12dcaf97d02494e518c1081326e2241fe4820721):/build-out \ 
-    zippiehq/reproducible-docker-builds:1.0 /bin/sh -c 'SQUASHFS_EXCLUDE=$(printf ".git\nREADME.md\n") /usr/bin/replay.sh /src /build-out'`
+16. `docker run -it -v $PWD/cache:/src -v $(realpath ../reproducible-docker-builds-cache-1.0-35b5d54c8a901db6bd02893c12dcaf97d02494e518c1081326e2241fe4820721):/build-out zippiehq/reproducible-docker-builds:1.0 /bin/sh -c 'SQUASHFS_EXCLUDE=$(printf ".git\nREADME.md\n") /usr/bin/replay.sh /src /build-out'`
 
 The following will take 4-5 hours, so consider running it in a 'screen' or
 similar:
 
-17. `docker run -it -v $PWD:/src -v $(realpath ../reproducible-docker-builds-1.0-07c29267e29a37940306936461b5c87052abb5b5b03f213f034cd538f84caf05):/build-out \
-    zippiehq/reproducible-docker-builds:1.0 /bin/sh -c 'SQUASHFS_EXCLUDE=$(printf ".git\nREADME.md\n") /usr/bin/replay.sh /src /build-out'`
+17. `docker run -it -v $PWD:/src -v $(realpath ../reproducible-docker-builds-1.0-07c29267e29a37940306936461b5c87052abb5b5b03f213f034cd538f84caf05):/build-out zippiehq/reproducible-docker-builds:1.0 /bin/sh -c 'SQUASHFS_EXCLUDE=$(printf ".git\nREADME.md\n") /usr/bin/replay.sh /src /build-out'`
 
 Then we verify the resulting docker builds yield same docker ID as earlier:
 
