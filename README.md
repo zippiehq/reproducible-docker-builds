@@ -16,7 +16,7 @@ NOTE: This README.md is not part of the replayable source set
 
 6.1: Notice there is no replay-result/ in `reproducible-docker-builds-cache-1.0-35b5d54c8a901db6bd02893c12dcaf97d02494e518c1081326e2241fe4820721/` and `reproducible-docker-builds-1.0-07c29267e29a37940306936461b5c87052abb5b5b03f213f034cd538f84caf05`
 
-7. `git clone https://github.com/zippiehq/reproducible-docker-builds`
+7. `umask 0022; git clone https://github.com/zippiehq/reproducible-docker-builds` # this umask is important to get same source file permissions
 8. `git checkout v1.0` # or specific git commit
 9. `cd reproducible-docker-builds`
 10. `docker pull zippiehq/reproducible-docker-builds:1.0`
