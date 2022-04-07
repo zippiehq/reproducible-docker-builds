@@ -8,7 +8,7 @@ fi
 
 rm -rf $BUILDDIR/replay-result
 mkdir -p $BUILDDIR/replay-result
-echo -n "$SQUASHFS_EXCLUDE" > $BUILDDIR/replay-result/squashfs.exclude
+
 ORIG=$PWD
 cd $BUILDDIR/replay-result
 truncate -s 8G buildresult.img

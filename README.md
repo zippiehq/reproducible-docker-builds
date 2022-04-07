@@ -7,6 +7,25 @@ NOTE: This README.md is not part of the replayable source set
 1. `mkdir -p verify-reproducible-docker-builds`
 2. `cd verify-reproducible-docker-builds`
 
+# Getting the source tree
+3. `umask 0022; git clone https://github.com/zippiehq/reproducible-docker-builds` # this umask is important to get same source file permissions
+4. `git checkout v1.0` # or specific git commit
+5. `cd reproducible-docker-builds`
+
+# Verifying the kernel build
+
+The kernel in use can be reproduced:
+
+6. `docker build -t zippiehq/reproducible-kernel-builds-kernel:1.1 kernel; ID=$(docker create zippiehq/reproducible-kernel-builds-kernel:1.0`; docker cp $ID:/builder/bzImage-nokvm-q35 bzImage-nokvm-q35.selfbuilt ; docker rm $ID`
+
+7. Confirm this: `sha256sum bzImage-nokvm-q35 bzImage-nokvm-q35.selfbuilt`, gives the following output (that the files match)
+
+`5d4778ba0cdc1284d2f7bae84751fbc2be8c658d3d32b301d4be5a8e16f2cd94 bzImage-nokvm-q35
+5d4778ba0cdc1284d2f7bae84751fbc2be8c658d3d32b301d4be5a8e16f2cd94 bzImage-nokvm-q35.selfbuilt`
+
+8. `rm -f bzImage-nokvm-q35.selfbuilt` # we don't need it anymore
+
+
 3. `wget -O reproducible-docker-builds-1.0-07c29267e29a37940306936461b5c87052abb5b5b03f213f034cd538f84caf05.tar.bz2 $IPFS_GATEWAY/ipfs/bafybeihsrealckwexpxqqymxorxs22rrvn5xah2bwr3ek5zpejru43h43i` # 987.68M size
 
 4. `wget -O reproducible-docker-builds-cache-1.0-35b5d54c8a901db6bd02893c12dcaf97d02494e518c1081326e2241fe4820721.tar.bz2 $IPFS_GATEWAY/ipfs/bafybeiggrhijidd3bkjfv2jwl3e7fpt5h4fkteykjgqao6d3nbpffdtwte` # 389.90M size
@@ -16,9 +35,6 @@ NOTE: This README.md is not part of the replayable source set
 
 6.1: Notice there is no replay-result/ in `reproducible-docker-builds-cache-1.0-35b5d54c8a901db6bd02893c12dcaf97d02494e518c1081326e2241fe4820721/` and `reproducible-docker-builds-1.0-07c29267e29a37940306936461b5c87052abb5b5b03f213f034cd538f84caf05`
 
-7. `umask 0022; git clone https://github.com/zippiehq/reproducible-docker-builds` # this umask is important to get same source file permissions
-8. `git checkout v1.0` # or specific git commit
-9. `cd reproducible-docker-builds`
 10. `docker pull zippiehq/reproducible-docker-builds:1.0`
 11. `docker pull zippiehq/reproducible-docker-builds-cache:1.0`
 12. `docker image inspect zippiehq/reproducible-docker-builds:1.0`

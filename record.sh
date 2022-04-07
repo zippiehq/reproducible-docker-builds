@@ -2,24 +2,38 @@
 if [ x$2 = x ]; then
   BUILDDIR=$(mktemp -d /tmp/record.XXXXXXXXXX)
 else
-  BUILDDIR=$2
+  rm -rf $2/reproducible-build-output
+  mkdir -p $2/reproducible-build-output
+  BUILDDIR=$2/reproducible-build-output
 fi
+
 mkdir -p $BUILDDIR/replay
 mkdir -p $BUILDDIR/result
 
 ORIG=$PWD
 cd $BUILDDIR/replay
-echo -n "$SQUASHFS_EXCLUDE" > $BUILDDIR/replay/squashfs.exclude
+
 sha256sum /builder/builder.squashfs /builder/bzImage-nokvm-q35 > BASE.sha256sum
 cp -v /builder/builder.squashfs /builder/bzImage-nokvm-q35 .
-truncate -s 8G buildresult.img
+
+if [ x$BUILDRESULT_SIZE = x ]; then
+   BUILDRESULT_SIZE=8G
+fi
+
+if [ x$RAM_SIZE = x ]; then
+   RAM_SIZE=8192m
+fi
+
+
+truncate -s $BUILDRESULT_SIZE buildresult.img
 
 cd ../result
-truncate -s 8G buildresult.img
+truncate -s $BUILDRESULT_SIZE buildresult.img
 
 cd $ORIG
 
-mksquashfs $1 $BUILDDIR/replay/src.squashfs -ef $BUILDDIR/replay/squashfs.exclude -reproducible -all-root -noI -noId -noD -noF -noX -mkfs-time 0 -all-time 0
+# Reads a sources tar from stdin
+sqfstar -reproducible -all-root -noI -noId -noD -noF -noX -mkfs-time 0 -all-time 0 $BUILDDIR/replay/src.squashfs
 
 touch $BUILDDIR/result/output.serial
 tail -f $BUILDDIR/result/output.serial &
@@ -31,7 +45,7 @@ time qemu-system-x86_64 \
    -device virtio-blk-pci,drive=root-blkreplay \
    -device virtio-blk-pci,drive=src-blkreplay \
    -device virtio-blk-pci,drive=dest-blkreplay \
-   -m 8192m -cpu qemu64 \
+   -m $RAM_SIZE -cpu qemu64 \
    -icount shift=auto,rr=record,rrfile=$BUILDDIR/replay/execution.trace \
    -accel accel=tcg,tb-size=4294967200 \
    -device virtio-serial-pci,id=virtio-serial0 \

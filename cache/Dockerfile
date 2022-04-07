@@ -7,10 +7,11 @@ RUN apt-get update && apt-get -d install -y \
   flex \
   libelf-dev \
   libssl-dev \
-  wget
+  wget \
+  gnupg2
 
 FROM alpine:3.15.3@sha256:1e014f84205d569a5cc3be4e108ca614055f7e21d11928946113ab3f36054801 AS buildstep
-RUN mkdir /etc/apk/cache && cd /etc/apk/cache && apk update && apk fetch -R docker dhclient openrc iptables qemu-system-x86_64 qemu-accel-tcg-x86_64 curl e2fsprogs squashfs-tools qemu-img e2tools e2fsprogs-extra
+RUN mkdir /etc/apk/cache && cd /etc/apk/cache && apk update && apk fetch -R docker dhclient openrc iptables qemu-system-x86_64 qemu-accel-tcg-x86_64 curl e2fsprogs squashfs-tools qemu-img e2tools e2fsprogs-extra go-ipfs
 
 FROM scratch
 COPY --from=debian-base /var/lib/apt /var/lib/apt
