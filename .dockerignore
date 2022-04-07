@@ -3,3 +3,5 @@
 README.md
 bzImage-nokvm-q35.selfbuilt
 reproducible-build-output
+cache
+kernel

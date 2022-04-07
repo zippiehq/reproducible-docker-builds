@@ -1,5 +1,5 @@
 FROM alpine:3.15.3@sha256:1e014f84205d569a5cc3be4e108ca614055f7e21d11928946113ab3f36054801 AS buildstep
-COPY --from=zippiehq/reproducible-docker-builds-cache:1.0@sha256:1935663b466c727a5f6420b3c74509123904a14a806be61c8ae48493305ae06c /etc/apk/cache /etc/apk/cache
+COPY --from=zippiehq/reproducible-docker-builds-cache:1.1@sha256:e49890a12cae59f505c4c39fdc7dcf42fc2d0d75de66eaf3a6f203463dbdb7be /etc/apk/cache /etc/apk/cache
 RUN apk add --no-network /etc/apk/cache/*.apk && rm -rf /etc/apk/cache && rm -rf /lib/apk/db/*
 RUN ln -s /sbin/mksquashfs /sbin/sqfstar
 RUN mkdir -p /var/lib/docker /etc/docker /opt/containerd /mnt

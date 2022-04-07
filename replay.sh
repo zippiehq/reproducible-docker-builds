@@ -1,23 +1,25 @@
 #!/bin/sh
-if [ x$2 = x ]; then
-  BUILDDIR=$(mktemp -d /tmp/record.XXXXXXXXXX)
-else
-  BUILDDIR=$2
+BUILDDIR=$(mktemp -d /tmp/record.XXXXXXXXXX)
+
+if [ x$BUILDRESULT_SIZE = x ]; then
+   BUILDRESULT_SIZE=8G
 fi
 
-
+if [ x$RAM_SIZE = x ]; then
+   RAM_SIZE=8192m
+fi
 rm -rf $BUILDDIR/replay-result
 mkdir -p $BUILDDIR/replay-result
 
 ORIG=$PWD
 cd $BUILDDIR/replay-result
-truncate -s 8G buildresult.img
+truncate -s $BUILDRESULT_SIZE buildresult.img
 
 cd $ORIG
 
-mksquashfs $1 $BUILDDIR/replay-result/src.squashfs-replay -ef $BUILDDIR/replay-result/squashfs.exclude -reproducible -all-root -noI -noId -noD -noF -noX -mkfs-time 0 -all-time 0
+sqfstar -reproducible -all-root -noI -noId -noD -noF -noX -mkfs-time 0 -all-time 0 $BUILDDIR/replay-result/src.squashfs-replay
 
-if cmp -s $BUILDDIR/replay/src.squashfs $BUILDDIR/replay-result/src.squashfs-replay; then
+if cmp -s $1/reproducible-build-output/replay/src.squashfs $BUILDDIR/replay-result/src.squashfs-replay; then
   echo "Source squashfs matches"
 else
   echo "Source squashfs mismatch, exiting"
@@ -36,30 +38,34 @@ time qemu-system-x86_64 \
    -device virtio-blk-pci,drive=src-blkreplay \
    -device virtio-blk-pci,drive=dest-blkreplay \
    -m 8192m -cpu qemu64 \
-   -icount shift=auto,rr=replay,rrfile=$BUILDDIR/replay/execution.trace \
+   -icount shift=auto,rr=replay,rrfile=$1/reproducible-build-output/replay/execution.trace \
    -accel accel=tcg,tb-size=4294967200 \
    -device virtio-serial-pci,id=virtio-serial0 \
    -chardev file,path=$BUILDDIR/replay-result/output.serial,id=serial \
    -device virtconsole,chardev=serial,id=console0 \
    -append "earlyprintk=hvc0 console=hvc0 reboot=t root=/dev/vda ro elevator=noop norandmaps mitigations=off init=/sbin/overlay-init" \
-   -rtc clock=host -kernel $BUILDDIR/replay/bzImage-nokvm-q35 \
-   -drive "driver=raw,if=none,file=$BUILDDIR/replay/builder.squashfs,readonly=on,id=root-direct" -drive "driver=blkreplay,if=none,image=root-direct,id=root-blkreplay,readonly=on" \
-   -drive "driver=raw,if=none,file=$BUILDDIR/replay/src.squashfs,readonly=on,id=src-direct" -drive "driver=blkreplay,if=none,image=src-direct,readonly=on,id=src-blkreplay" \
+   -rtc clock=host -kernel $1/reproducible-build-output/replay/bzImage-nokvm-q35 \
+   -drive "driver=raw,if=none,file=$1/reproducible-build-output/replay/builder.squashfs,readonly=on,id=root-direct" -drive "driver=blkreplay,if=none,image=root-direct,id=root-blkreplay,readonly=on" \
+   -drive "driver=raw,if=none,file=$1/reproducible-build-output/replay/src.squashfs,readonly=on,id=src-direct" -drive "driver=blkreplay,if=none,image=src-direct,readonly=on,id=src-blkreplay" \
    -drive "driver=raw,if=none,file=$BUILDDIR/replay-result/buildresult.img,cache=off,id=dest-direct" -drive "driver=blkreplay,if=none,image=dest-direct,id=dest-blkreplay" \
    -netdev user,id=net1 -device rtl8139,netdev=net1 -object filter-replay,id=replay,netdev=net1
 
 kill $TAILPID
-e2cp $BUILDDIR/replay-result/buildresult.img:/result/docker-image.id $BUILDDIR/replay-result/docker-image.id
-e2cp $BUILDDIR/replay-result/buildresult.img:/result/docker-build.log $BUILDDIR/replay-result/docker-build.log
-e2cp $BUILDDIR/replay-result/buildresult.img:/result/docker-image.tar $BUILDDIR/replay-result/docker-image.tar
+mkdir -p $1/reproducible-build-output/replay-result
+e2cp $BUILDDIR/replay-result/buildresult.img:/result/docker-image.id $1/reproducible-build-output/replay-result/docker-image.id
+e2cp $BUILDDIR/replay-result/buildresult.img:/result/docker-build.log $1/reproducible-build-output/replay-result/docker-build.log
+e2cp $BUILDDIR/replay-result/buildresult.img:/result/docker-image.tar $1/reproducible-build-output/replay-result/docker-image.tar
+
+rm $BUILDDIR/replay-result/buildresult.img
+cp $BUILDDIR/replay-result/* $1/reproducible-build-output/replay-result/
 
 ORIG=$PWD
-cd $BUILDDIR/replay-result
-rm $BUILDDIR/replay-result/buildresult.img
+cd $1/reproducible-build-output/replay-result
 sha256sum /builder/builder.squashfs /builder/bzImage-nokvm-q35 * > $BUILDDIR/MANIFEST.sha256
+mv $BUILDDIR/MANIFEST.sha256 .
 cd $ORIG
-mv $BUILDDIR/MANIFEST.sha256 $BUILDDIR/replay-result/MANIFEST.sha256
-cat $BUILDDIR/replay-result/MANIFEST.sha256
+
+cat $1/reproducible-build-output/replay-result/MANIFEST.sha256
 echo
-cat $BUILDDIR/replay-result/docker-image.id
+cat $1/reproducible-build-output/replay-result/docker-image.id
 echo

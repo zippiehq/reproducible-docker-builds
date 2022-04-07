@@ -1,11 +1,11 @@
 #!/bin/sh
-if [ x$2 = x ]; then
-  BUILDDIR=$(mktemp -d /tmp/record.XXXXXXXXXX)
-else
-  rm -rf $2/reproducible-build-output
-  mkdir -p $2/reproducible-build-output
-  BUILDDIR=$2/reproducible-build-output
-fi
+BUILDDIR=$(mktemp -d /tmp/record.XXXXXXXXXX)
+
+#else
+#  rm -rf $2/reproducible-build-output
+#  mkdir -p $2/reproducible-build-output
+#  BUILDDIR=$2/reproducible-build-output
+#fi
 
 mkdir -p $BUILDDIR/replay
 mkdir -p $BUILDDIR/result
@@ -23,7 +23,6 @@ fi
 if [ x$RAM_SIZE = x ]; then
    RAM_SIZE=8192m
 fi
-
 
 truncate -s $BUILDRESULT_SIZE buildresult.img
 
@@ -74,4 +73,10 @@ mv $BUILDDIR/MANIFEST.sha256 $BUILDDIR/result/MANIFEST.sha256
 cat $BUILDDIR/result/MANIFEST.sha256
 echo
 cat $BUILDDIR/result/docker-image.id
+
 echo
+
+rm -rf $1/reproducible-build-output
+mkdir -p $1/reproducible-build-output
+cp --sparse=always -r $BUILDDIR/* $1/reproducible-build-output
+rm -rf $BUILDDIR
