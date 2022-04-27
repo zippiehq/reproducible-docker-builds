@@ -7,7 +7,21 @@ NOTE: This README.md is not part of the replayable source set
 
 2. `docker pull zippiehq/reproducible-docker-builds-cache:1.1`
 
-# Verifying the builds
+# Using it
+
+Inside a git checkout w/ a Dockerfile, do this:
+
+`git -c "tar.umask=0022" archive --format=tar HEAD | docker run -v $PWD:/out -i zippiehq/reproducible-docker-builds:1.1 /usr/bin/record.sh /out`
+
+This will yield a:
+- Reproducible recording of the build in `reproducible-build-output/replay` which can you send to someone else who'd then replay it with same source material and end up in same result
+- The result of the docker image build in `reproducible-build-output/result/docker-image.tar` which you can `docker load -i`
+
+On another machine, you can then, inside same git checkout and content, place the reproducible-build-output folder in it and:
+
+`git -c "tar.umask=0022" archive --format=tar HEAD | docker run -v $PWD:/out -i zippiehq/reproducible-docker-builds:1.1 /usr/bin/replay.sh /out`
+
+# Verifying the published builds of this software
 
 ## Getting the source tree
 1. `git clone https://github.com/zippiehq/reproducible-docker-builds`
