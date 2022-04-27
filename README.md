@@ -32,7 +32,7 @@ On another machine, you can then, inside same git checkout and content, place th
 
 The kernel in use can be reproduced:
 
-4. `docker build -t zippiehq/reproducible-kernel-builds-kernel:1.1 kernel; ID=$(docker create zippiehq/reproducible-kernel-builds-kernel:1.1)`; docker cp $ID:/builder/bzImage-nokvm-q35 bzImage-nokvm-q35.selfbuilt ; docker rm $ID`
+4. `docker build -t zippiehq/reproducible-kernel-builds-kernel:1.1 kernel; ID=$(docker create zippiehq/reproducible-kernel-builds-kernel:1.1); docker cp $ID:/builder/bzImage-nokvm-q35 bzImage-nokvm-q35.selfbuilt ; docker rm $ID`
 
 5. Confirm this: `sha256sum bzImage-nokvm-q35 bzImage-nokvm-q35.selfbuilt`, gives the following output (that the files match)
 
