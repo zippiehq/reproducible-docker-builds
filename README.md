@@ -73,7 +73,7 @@ The kernel in use can be reproduced:
 
 ## Replaying the build process for the builds container, this will take about 18 minutes
 
-18. git -c "tar.umask=0022" archive --format=tar  HEAD | docker run -v $PWD:/out -i zippiehq/reproducible-docker-builds:1.1 /usr/bin/replay.sh /out
+18. `git -c "tar.umask=0022" archive --format=tar  HEAD | docker run -v $PWD:/out -i zippiehq/reproducible-docker-builds:1.1 /usr/bin/replay.sh /out`
 
 ## Then we verify the resulting builds yield same docker ID as earlier:
 
