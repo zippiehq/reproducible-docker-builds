@@ -1,71 +1,80 @@
 
 NOTE: This README.md is not part of the replayable source set
 
+# Getting the software
+
+1. `docker pull zippiehq/reproducible-docker-builds:1.1`
+
+2. `docker pull zippiehq/reproducible-docker-builds-cache:1.1`
+
 # Verifying the builds
 
-0. `IPFS_GATEWAY=https://ipfs.io`
-1. `mkdir -p verify-reproducible-docker-builds`
-2. `cd verify-reproducible-docker-builds`
+## Getting the source tree
+1. `git clone https://github.com/zippiehq/reproducible-docker-builds`
+2. `git checkout v1.1` # or specific git commit 2da43f3411b3792b6f401fa6d84e5794d71ddaac
+3. `cd reproducible-docker-builds`
 
-# Getting the source tree
-3. `umask 0022; git clone https://github.com/zippiehq/reproducible-docker-builds` # this umask is important to get same source file permissions
-4. `git checkout v1.0` # or specific git commit
-5. `cd reproducible-docker-builds`
-
-# Verifying the kernel build
+## Verifying the kernel build
 
 The kernel in use can be reproduced:
 
-6. `docker build -t zippiehq/reproducible-kernel-builds-kernel:1.1 kernel; ID=$(docker create zippiehq/reproducible-kernel-builds-kernel:1.0`; docker cp $ID:/builder/bzImage-nokvm-q35 bzImage-nokvm-q35.selfbuilt ; docker rm $ID`
+4. `docker build -t zippiehq/reproducible-kernel-builds-kernel:1.1 kernel; ID=$(docker create zippiehq/reproducible-kernel-builds-kernel:1.1)`; docker cp $ID:/builder/bzImage-nokvm-q35 bzImage-nokvm-q35.selfbuilt ; docker rm $ID`
 
-7. Confirm this: `sha256sum bzImage-nokvm-q35 bzImage-nokvm-q35.selfbuilt`, gives the following output (that the files match)
+5. Confirm this: `sha256sum bzImage-nokvm-q35 bzImage-nokvm-q35.selfbuilt`, gives the following output (that the files match)
 
 `5d4778ba0cdc1284d2f7bae84751fbc2be8c658d3d32b301d4be5a8e16f2cd94 bzImage-nokvm-q35
 5d4778ba0cdc1284d2f7bae84751fbc2be8c658d3d32b301d4be5a8e16f2cd94 bzImage-nokvm-q35.selfbuilt`
 
-8. `rm -f bzImage-nokvm-q35.selfbuilt` # we don't need it anymore
+6. `rm -f bzImage-nokvm-q35.selfbuilt` # we don't need it anymore
+
+7. `IPFS_GATEWAY=https://ipfs.io`   # or select your own
+
+## Checking the metadata of the published containers
+
+8. `docker pull zippiehq/reproducible-docker-builds:1.1`
+
+9. `docker pull zippiehq/reproducible-docker-builds-cache:1.1`
+
+10. `docker image inspect zippiehq/reproducible-docker-builds:1.1`
+11. Verify that the inspect command shows the following Id for the zippiehq/reproducible-docker-builds:1.1 image:
+     `         "Id": "sha256:730fbb363bf5329c8fa2dbc50a25474aeffd01cca74f275494d2717c5e4c99d1", `
+
+12. docker image inspect zippiehq/reproducible-docker-builds-cache:1.1
+
+13. Verify that the inspect command shows the following Id for the zippiehq/reproducible-docker-builds-cache:1.1 image:
+     ` "Id": "sha256:a84a4fc65ceaa9b5b8b2cd287cfa07d004fb409f1016e2c1e2d7ad3af9e8fe0b", `
+
+## Getting the reproducible build replay material
+
+14. `wget -O reproducible-docker-build-1.1.tar.bz2 $IPFS_GATEWAY/ipfs/bafybeihqwv3hfessgcanexrr7szixeuo3vl7pt3l32jpsz5ybiwdtebnwa` # (819.12mb size)
+
+15. `tar --sparse -xf reproducible-docker-build-1.1.tar.bz2`
+
+16. Notice there is no replay-result in cache/reproducible-build-result/ and reproducible-build-result/
 
 
-3. `wget -O reproducible-docker-builds-1.0-07c29267e29a37940306936461b5c87052abb5b5b03f213f034cd538f84caf05.tar.bz2 $IPFS_GATEWAY/ipfs/bafybeihsrealckwexpxqqymxorxs22rrvn5xah2bwr3ek5zpejru43h43i` # 987.68M size
+## Replaying the build process for the cache container, This will take about 8 minutes:
 
-4. `wget -O reproducible-docker-builds-cache-1.0-35b5d54c8a901db6bd02893c12dcaf97d02494e518c1081326e2241fe4820721.tar.bz2 $IPFS_GATEWAY/ipfs/bafybeiggrhijidd3bkjfv2jwl3e7fpt5h4fkteykjgqao6d3nbpffdtwte` # 389.90M size
+17. `cd cache && git -c "tar.umask=0002" archive --format=tar  HEAD | docker run -v $PWD:/out -i zippiehq/reproducible-docker-builds:1.1 /usr/bin/replay.sh /out && cd ..`
 
-5. `tar --sparse -xf reproducible-docker-builds-1.0-07c29267e29a37940306936461b5c87052abb5b5b03f213f034cd538f84caf05.tar.bz2`
-6. `tar --sparse -xf reproducible-docker-builds-cache-1.0-35b5d54c8a901db6bd02893c12dcaf97d02494e518c1081326e2241fe4820721.tar.bz2`
+## Replaying the build process for the builds container, this will take about 18 minutes
 
-6.1: Notice there is no replay-result/ in `reproducible-docker-builds-cache-1.0-35b5d54c8a901db6bd02893c12dcaf97d02494e518c1081326e2241fe4820721/` and `reproducible-docker-builds-1.0-07c29267e29a37940306936461b5c87052abb5b5b03f213f034cd538f84caf05`
+18. git -c "tar.umask=0022" archive --format=tar  HEAD | docker run -v $PWD:/out -i zippiehq/reproducible-docker-builds:1.1 /usr/bin/replay.sh /out
 
-10. `docker pull zippiehq/reproducible-docker-builds:1.0`
-11. `docker pull zippiehq/reproducible-docker-builds-cache:1.0`
-12. `docker image inspect zippiehq/reproducible-docker-builds:1.0`
-13. Verify that the inspect command shows the following Id for the zippiehq/reproducible-docker-builds:1.0 image:
-      `  "Id": "sha256:07c29267e29a37940306936461b5c87052abb5b5b03f213f034cd538f84caf05", `
+## Then we verify the resulting builds yield same docker ID as earlier:
 
-14. docker image inspect zippiehq/reproducible-docker-builds-cache:1.0
+19. `docker load -i reproducible-build-output/replay-result/docker-image.tar`
 
-15. Verify that the inspect command shows the following Id for the zippiehq/reproducible-docker-builds-cache:1.0 image:
-      `  "Id": "sha256:35b5d54c8a901db6bd02893c12dcaf97d02494e518c1081326e2241fe4820721", `
+Which should show:
+
+`Loaded image ID: sha256:730fbb363bf5329c8fa2dbc50a25474aeffd01cca74f275494d2717c5e4c99d1`
+
+Which matches the above ID for zippiehq/reproducible-docker-builds:1.1
+
+20. `docker load -i cache/reproducible-build-output/replay-result/docker-image.tar`
+
+Which should show:
+
+`Loaded image ID: sha256:a84a4fc65ceaa9b5b8b2cd287cfa07d004fb409f1016e2c1e2d7ad3af9e8fe0b`
 
 
-This will take about 8 minutes:
-
-16. `docker run -it -v $PWD/cache:/src -v $(realpath ../reproducible-docker-builds-cache-1.0-35b5d54c8a901db6bd02893c12dcaf97d02494e518c1081326e2241fe4820721):/build-out zippiehq/reproducible-docker-builds:1.0 /bin/sh -c 'SQUASHFS_EXCLUDE=$(printf ".git\nREADME.md\n") /usr/bin/replay.sh /src /build-out'`
-
-The following will take 4-5 hours, so consider running it in a 'screen' or
-similar:
-
-17. `docker run -it -v $PWD:/src -v $(realpath ../reproducible-docker-builds-1.0-07c29267e29a37940306936461b5c87052abb5b5b03f213f034cd538f84caf05):/build-out zippiehq/reproducible-docker-builds:1.0 /bin/sh -c 'SQUASHFS_EXCLUDE=$(printf ".git\nREADME.md\n") /usr/bin/replay.sh /src /build-out'`
-
-Then we verify the resulting docker builds yield same docker ID as earlier:
-
-18. `docker load -i ../reproducible-docker-builds-cache-1.0-35b5d54c8a901db6bd02893c12dcaf97d02494e518c1081326e2241fe4820721/replay-result/docker-image.tar`
-
-Should say:
-
-`Loaded image ID: sha256:35b5d54c8a901db6bd02893c12dcaf97d02494e518c1081326e2241fe4820721`
-
-19. `docker load -i ../reproducible-docker-builds-1.0-07c29267e29a37940306936461b5c87052abb5b5b03f213f034cd538f84caf05/replay-result/docker-image.tar`
-
-Should say:
-
-`Loaded image ID: sha256:07c29267e29a37940306936461b5c87052abb5b5b03f213f034cd538f84caf05`
